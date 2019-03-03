@@ -28,6 +28,9 @@ class FakeSchedulerBackend extends SchedulerBackend {
   def stop() {}
   def reviveOffers() {}
   def defaultParallelism() = 1
+
+  override def updateMapOutput(eId: String, shuffleId: Int,
+                               statuses: Array[Byte], index: Int): Unit = ???
 }
 
 class FakeTaskSetManager(
@@ -85,7 +88,7 @@ class FakeTaskSetManager(
   {
     if (tasksSuccessful + numRunningTasks < numTasks) {
       increaseRunningTasks(1)
-      Some(new TaskDescription(0, execId, "task 0:0", 0, null))
+      Some(new TaskDescription(0, execId, "task 0:0", 0, 0, null, null))
     } else {
       None
     }

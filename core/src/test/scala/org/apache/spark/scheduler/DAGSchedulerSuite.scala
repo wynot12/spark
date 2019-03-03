@@ -62,6 +62,9 @@ class DAGSchedulerSuite extends TestKit(ActorSystem("DAGSchedulerSuite")) with F
     }
     override def setDAGScheduler(dagScheduler: DAGScheduler) = {}
     override def defaultParallelism() = 2
+
+    override def updateMapOutput(eId: String, shuffleId: Int,
+                                 statuses: Array[Byte], index: Int): Unit = ???
   }
 
   /** Length of time to wait while draining listener events. */
