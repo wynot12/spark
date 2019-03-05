@@ -399,9 +399,8 @@ class BlockManagerMasterActor(val isLocal: Boolean, conf: SparkConf, listenerBus
   }
 
   private def getBlockManagerIdByExecId(execId: String): BlockManagerId = {
-    return blockManagerIdByExecutor.getOrElse(execId, null)
+    return blockManagerIdByExecutor.getOrElse(execId, new BlockManagerId())
   }
-
 
   private def getLocationsMultipleBlockIds(blockIds: Array[BlockId]): Seq[Seq[BlockManagerId]] = {
     blockIds.map(blockId => getLocations(blockId))

@@ -40,7 +40,7 @@ class BlockManagerId private (
     private var nettyPort_ : Int
   ) extends Externalizable {
 
-  private def this() = this(null, null, 0, 0)  // For deserialization only
+  def this() = this(null, null, 0, 0)  // For deserialization only
 
   def executorId: String = executorId_
 
