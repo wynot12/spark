@@ -51,7 +51,9 @@ private[spark] class CoarseGrainedExecutorBackend(
   override def preStart() {
     logInfo("Connecting to driver: " + driverUrl)
     driver = context.actorSelection(driverUrl)
-    driver ! RegisterExecutor(executorId, hostPort, cores, readBWFromFile("/root/bw.txt"))
+    val bw = readBWFromFile("/home/ubuntu/conf/iridium/bw.txt")
+    logInfo("bw: %f".format(bw))
+    driver ! RegisterExecutor(executorId, hostPort, cores, bw)
     context.system.eventStream.subscribe(self, classOf[RemotingLifecycleEvent])
   }
 
