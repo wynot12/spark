@@ -35,14 +35,14 @@ public final class JavaWordCount {
 
   public static void main(String[] args) throws Exception {
 
-    if (args.length < 1) {
-      System.err.println("Usage: JavaWordCount <file>");
+    if (args.length < 2) {
+      System.err.println("Usage: JavaWordCount <file> <parallelism>");
       System.exit(1);
     }
 
     SparkConf sparkConf = new SparkConf().setAppName("JavaWordCount");
     JavaSparkContext ctx = new JavaSparkContext(sparkConf);
-    JavaRDD<String> lines = ctx.textFile(args[0], 1);
+    JavaRDD<String> lines = ctx.textFile(args[0], Integer.parseInt(args[1]));
 
     JavaRDD<String> words = lines.flatMap(new FlatMapFunction<String, String>() {
       @Override
