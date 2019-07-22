@@ -28,7 +28,43 @@ import org.apache.spark.util.Benchmark
  */
 class MiscBenchmark extends BenchmarkBase {
 
-  test("filter & aggregate without group") {
+  test("custom") {
+    val N = 500L << 22
+    runBenchmark("range", N) {
+      sparkSession.range(N).collect()
+    }
+
+    runBenchmark("range", N) {
+      sparkSession.range(N).collect()
+    }
+
+    runBenchmark("range", N) {
+      sparkSession.range(N).collect()
+    }
+
+    runBenchmark("range/filter", N) {
+      sparkSession.range(N).filter("(id & 1) = 1").collect()
+    }
+
+    runBenchmark("range/filter", N) {
+      sparkSession.range(N).filter("(id & 1) = 1").collect()
+    }
+
+    runBenchmark("range/filter", N) {
+      sparkSession.range(N).filter("(id & 1) = 1").collect()
+    }
+    /*
+    Java HotSpot(TM) 64-Bit Server VM 1.8.0_60-b27 on Mac OS X 10.11
+    Intel(R) Core(TM) i7-4960HQ CPU @ 2.60GHz
+
+    range/filter/sum:                        Best/Avg Time(ms)    Rate(M/s)   Per Row(ns)   Relative
+    ------------------------------------------------------------------------------------------------
+    range/filter/sum codegen=false              30663 / 31216         68.4          14.6       1.0X
+    range/filter/sum codegen=true                 2399 / 2409        874.1           1.1      12.8X
+    */
+  }
+
+  ignore("filter & aggregate without group") {
     val N = 500L << 22
     runBenchmark("range/filter/sum", N) {
       sparkSession.range(N).filter("(id & 1) = 1").groupBy().sum().collect()
@@ -44,7 +80,7 @@ class MiscBenchmark extends BenchmarkBase {
     */
   }
 
-  test("range/limit/sum") {
+  ignore("range/limit/sum") {
     val N = 500L << 20
     runBenchmark("range/limit/sum", N) {
       sparkSession.range(N).limit(1000000).groupBy().sum().collect()
@@ -58,7 +94,7 @@ class MiscBenchmark extends BenchmarkBase {
     */
   }
 
-  test("sample") {
+  ignore("sample") {
     val N = 500 << 18
     runBenchmark("sample with replacement", N) {
       sparkSession.range(N).sample(withReplacement = true, 0.01).groupBy().sum().collect()
@@ -87,7 +123,7 @@ class MiscBenchmark extends BenchmarkBase {
     */
   }
 
-  test("collect") {
+  ignore("collect") {
     val N = 1 << 20
 
     val benchmark = new Benchmark("collect", N)
@@ -112,7 +148,7 @@ class MiscBenchmark extends BenchmarkBase {
      */
   }
 
-  test("collect limit") {
+  ignore("collect limit") {
     val N = 1 << 20
 
     val benchmark = new Benchmark("collect limit", N)
@@ -133,7 +169,7 @@ class MiscBenchmark extends BenchmarkBase {
      */
   }
 
-  test("generate explode") {
+  ignore("generate explode") {
     val N = 1 << 24
     runBenchmark("generate explode array", N) {
       val df = sparkSession.range(N).selectExpr(
@@ -212,7 +248,7 @@ class MiscBenchmark extends BenchmarkBase {
           (i.toString, (i + 1).toString, (i + 2).toString, (i + 3).toString)
         })))).toDF("col", "arr")
 
-      df.selectExpr("*", "expode(arr) as arr_col")
+      df.selectExpr("*", "explode(arr) as arr_col")
         .select("col", "arr_col.*").count
     }
 
@@ -240,7 +276,7 @@ class MiscBenchmark extends BenchmarkBase {
 
   }
 
-  test("generate regular generator") {
+  ignore("generate regular generator") {
     val N = 1 << 24
     runBenchmark("generate stack", N) {
       val df = sparkSession.range(N).selectExpr(

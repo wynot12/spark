@@ -30,6 +30,8 @@ private[benchmark] trait BenchmarkBase extends SparkFunSuite {
   lazy val sparkSession = SparkSession.builder
     .master("local[1]")
     .appName("microbenchmark")
+    .config("spark.executor.memory", "8g")
+    .config("spark.driver.memory", "4g")
     .config("spark.sql.shuffle.partitions", 1)
     .config("spark.sql.autoBroadcastJoinThreshold", 1)
     .getOrCreate()
@@ -38,12 +40,12 @@ private[benchmark] trait BenchmarkBase extends SparkFunSuite {
   def runBenchmark(name: String, cardinality: Long)(f: => Unit): Unit = {
     val benchmark = new Benchmark(name, cardinality)
 
-    benchmark.addCase(s"$name wholestage off", numIters = 2) { iter =>
+    benchmark.addCase(s"$name wholestage off", numIters = 10) { iter =>
       sparkSession.conf.set("spark.sql.codegen.wholeStage", value = false)
       f
     }
 
-    benchmark.addCase(s"$name wholestage on", numIters = 5) { iter =>
+    benchmark.addCase(s"$name wholestage on", numIters = 10) { iter =>
       sparkSession.conf.set("spark.sql.codegen.wholeStage", value = true)
       f
     }
