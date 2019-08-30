@@ -117,6 +117,7 @@ case class ShuffleExchangeExec(
   private var cachedShuffleRDD: ShuffledRowRDD = null
 
   protected override def doExecute(): RDD[InternalRow] = attachTree(this, "execute") {
+    logWY("doExecute." + simpleString)
     // Returns the same ShuffleRowRDD if this plan is used by multiple plans.
     if (cachedShuffleRDD == null) {
       cachedShuffleRDD = coordinator match {

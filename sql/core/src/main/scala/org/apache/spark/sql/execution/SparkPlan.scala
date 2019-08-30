@@ -125,9 +125,11 @@ abstract class SparkPlan extends QueryPlan[SparkPlan] with Logging with Serializ
    * Concrete implementations of SparkPlan should override `doExecute`.
    */
   final def execute(): RDD[InternalRow] = executeQuery {
+    logWY("execute. " + simpleString)
     if (isCanonicalizedPlan) {
       throw new IllegalStateException("A canonicalized plan is not supposed to be executed.")
     }
+    logWY("call DoExecute. " + simpleString)
     doExecute()
   }
 
@@ -149,6 +151,7 @@ abstract class SparkPlan extends QueryPlan[SparkPlan] with Logging with Serializ
    * for visualization.
    */
   protected final def executeQuery[T](query: => T): T = {
+    logWY("executeQuery. " + simpleString)
     RDDOperationScope.withScope(sparkContext, nodeName, false, true) {
       prepare()
       waitForSubqueries()
@@ -196,6 +199,7 @@ abstract class SparkPlan extends QueryPlan[SparkPlan] with Logging with Serializ
    * Prepares this SparkPlan for execution. It's idempotent.
    */
   final def prepare(): Unit = {
+    logWY("Prepare. " + simpleString);
     // doPrepare() may depend on it's children, we should call prepare() on all the children first.
     children.foreach(_.prepare())
     synchronized {

@@ -67,6 +67,8 @@ case class ProjectExec(projectList: Seq[NamedExpression], child: SparkPlan)
   }
 
   protected override def doExecute(): RDD[InternalRow] = {
+    logWY("doExecute." + simpleString + "output:" + output)
+    logWY("Project." + projectList + "child:" + child.simpleString + "child.output:" + child.output)
     child.execute().mapPartitionsWithIndexInternal { (index, iter) =>
       val project = UnsafeProjection.create(projectList, child.output,
         subexpressionEliminationEnabled)
@@ -209,6 +211,7 @@ case class FilterExec(condition: Expression, child: SparkPlan)
   }
 
   protected override def doExecute(): RDD[InternalRow] = {
+    logWY("doExecute." + simpleString)
     val numOutputRows = longMetric("numOutputRows")
     child.execute().mapPartitionsWithIndexInternal { (index, iter) =>
       val predicate = newPredicate(condition, child.output)

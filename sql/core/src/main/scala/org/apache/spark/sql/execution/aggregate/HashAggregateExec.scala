@@ -99,6 +99,8 @@ case class HashAggregateExec(
     val avgHashProbe = longMetric("avgHashProbe")
     val aggTime = longMetric("aggTime")
 
+    logWY("doExecute." + simpleString)
+
     child.execute().mapPartitionsWithIndex { (partIndex, iter) =>
 
       val beforeAgg = System.nanoTime()

@@ -595,6 +595,8 @@ case class WholeStageCodegenExec(child: SparkPlan)(val codegenStageId: Int)
   }
 
   override def doExecute(): RDD[InternalRow] = {
+    logWY("doExecute." + simpleString)
+
     val (ctx, cleanedSource) = doCodeGen()
     // try to compile and fallback if it failed
     val (_, maxCodeSize) = try {

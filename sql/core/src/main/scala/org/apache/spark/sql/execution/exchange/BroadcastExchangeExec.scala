@@ -142,6 +142,7 @@ case class BroadcastExchangeExec(
   }
 
   override protected[sql] def doExecuteBroadcast[T](): broadcast.Broadcast[T] = {
+    logWY("doExecuteBroadcast." + simpleString)
     try {
       ThreadUtils.awaitResult(relationFuture, timeout).asInstanceOf[broadcast.Broadcast[T]]
     } catch {

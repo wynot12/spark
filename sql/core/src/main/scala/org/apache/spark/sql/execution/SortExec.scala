@@ -94,11 +94,12 @@ case class SortExec(
   }
 
   protected override def doExecute(): RDD[InternalRow] = {
+    logWY("doExecute." + simpleString)
     val peakMemory = longMetric("peakMemory")
     val spillSize = longMetric("spillSize")
     val sortTime = longMetric("sortTime")
 
-    child.execute().mapPartitionsInternal { iter =>
+    val sortedRdd = child.execute().mapPartitionsInternal { iter =>
       val sorter = createSorter()
 
       val metrics = TaskContext.get().taskMetrics()
@@ -113,6 +114,10 @@ case class SortExec(
 
       sortedIterator
     }
+
+    logWY("sortedRdd." + sortedRdd.id)
+
+    sortedRdd.asInstanceOf[RDD[InternalRow]]
   }
 
   override def usedInputs: AttributeSet = AttributeSet(Seq.empty)

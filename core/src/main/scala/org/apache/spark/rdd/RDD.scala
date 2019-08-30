@@ -847,11 +847,16 @@ abstract class RDD[T: ClassTag](
   def mapPartitionsWithIndex[U: ClassTag](
       f: (Int, Iterator[T]) => Iterator[U],
       preservesPartitioning: Boolean = false): RDD[U] = withScope {
+    logWY("mapPartitionsWithIndex." + id)
     val cleanedF = sc.clean(f)
-    new MapPartitionsRDD(
+    val mapRdd = new MapPartitionsRDD(
       this,
       (context: TaskContext, index: Int, iter: Iterator[T]) => cleanedF(index, iter),
       preservesPartitioning)
+
+    logWY("mapRDD." + mapRdd.id)
+
+    mapRdd
   }
 
   /**

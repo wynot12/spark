@@ -50,6 +50,10 @@ trait Logging {
   }
 
   // Log methods that take only a String
+  protected def logWY(msg: => String) = {
+    if (log.isInfoEnabled) log.info("[WY]" + msg)
+  }
+
   protected def logInfo(msg: => String) {
     if (log.isInfoEnabled) log.info(msg)
   }

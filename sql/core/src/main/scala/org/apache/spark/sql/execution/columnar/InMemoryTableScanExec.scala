@@ -305,8 +305,10 @@ case class InMemoryTableScanExec(
 
   protected override def doExecute(): RDD[InternalRow] = {
     if (supportsBatch) {
+      logWY("SupportBatch." + simpleString)
       WholeStageCodegenExec(this)(codegenStageId = 0).execute()
     } else {
+      logWY("No SupportBatch." + simpleString)
       inputRDD
     }
   }

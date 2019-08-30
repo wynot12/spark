@@ -53,6 +53,7 @@ case class ReusedExchangeExec(override val output: Seq[Attribute], child: Exchan
   override def doCanonicalize(): SparkPlan = child.canonicalized
 
   def doExecute(): RDD[InternalRow] = {
+    logWY("ReusedExchangeExec::doExecute." + simpleString)
     child.execute()
   }
 
