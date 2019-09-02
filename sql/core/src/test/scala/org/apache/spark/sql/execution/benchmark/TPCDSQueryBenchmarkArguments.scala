@@ -21,6 +21,8 @@ import java.util.Locale
 
 
 class TPCDSQueryBenchmarkArguments(val args: Array[String]) {
+  var queryNum: Int = 0
+  var numIter: Int = 0
   var dataLocation: String = null
   var queryFilter: Set[String] = Set.empty
 
@@ -36,6 +38,14 @@ class TPCDSQueryBenchmarkArguments(val args: Array[String]) {
 
     while (args.nonEmpty) {
       args match {
+        case optName :: value :: tail if optionMatch("--query-num", optName) =>
+          queryNum = Integer.parseInt(value)
+          args = tail
+
+        case optName :: value :: tail if optionMatch("--num-iter", optName) =>
+          numIter = Integer.parseInt(value)
+          args = tail
+
         case optName :: value :: tail if optionMatch("--data-location", optName) =>
           dataLocation = value
           args = tail

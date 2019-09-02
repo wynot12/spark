@@ -32,37 +32,22 @@ import org.apache.spark.util.Benchmark
  *  spark-submit --class <this class> <spark sql test jar> --data-location <TPCDS data location>
  */
 object TPCDSQueryBenchmark extends Logging {
-  val conf =
-    new SparkConf()
-      .setMaster("local[1]")
-      .setAppName("test-sql-context")
-      .set("spark.sql.parquet.compression.codec", "snappy")
-      .set("spark.sql.shuffle.partitions", "4")
-      .set("spark.driver.memory", "3g")
-      .set("spark.executor.memory", "3g")
-      .set("spark.sql.autoBroadcastJoinThreshold", (20 * 1024 * 1024).toString)
-      .set("spark.sql.crossJoin.enabled", "true")
 
-  val spark = SparkSession.builder.config(conf).getOrCreate()
-
-  val tables = Seq("catalog_page", "catalog_returns", "customer", "customer_address",
-    "customer_demographics", "date_dim", "household_demographics", "inventory", "item",
-    "promotion", "store", "store_returns", "catalog_sales", "web_sales", "store_sales",
-    "web_returns", "web_site", "reason", "call_center", "warehouse", "ship_mode", "income_band",
-    "time_dim", "web_page")
-
-  def setupTables(dataLocation: String): Map[String, Long] = {
+  private def setupTables(spark: SparkSession, tables: Seq[String],
+                          dataLocation: String): Map[String, Long] = {
     tables.map { tableName =>
-      spark.read.parquet(s"$dataLocation/$tableName").createOrReplaceTempView(tableName)
+      val input = spark.read.parquet(s"$dataLocation/$tableName")
+      input.createOrReplaceTempView(tableName)
       tableName -> spark.table(tableName).count()
     }.toMap
   }
 
-  def runTpcdsQueries(
-      queryLocation: String,
-      queries: Seq[String],
-      tableSizes: Map[String, Long],
-      nameSuffix: String = ""): Unit = {
+  private def runTpcdsQueries(spark: SparkSession,
+                              queryLocation: String,
+                              queries: Seq[String],
+                              tableSizes: Map[String, Long],
+                              numIters: Int,
+                              nameSuffix: String = ""): Unit = {
     queries.foreach { name =>
       val queryString = resourceToString(s"$queryLocation/$name.sql",
         classLoader = Thread.currentThread().getContextClassLoader)
@@ -80,7 +65,7 @@ object TPCDSQueryBenchmark extends Logging {
         case _ =>
       }
       val numRows = queryRelations.map(tableSizes.getOrElse(_, 0L)).sum
-      val benchmark = new Benchmark(s"TPCDS Snappy", numRows, 5)
+      val benchmark = new Benchmark(s"TPCDS Snappy", numRows, numIters)
       benchmark.addCase(s"$name$nameSuffix") { _ =>
         spark.sql(queryString).collect()
       }
@@ -90,7 +75,7 @@ object TPCDSQueryBenchmark extends Logging {
     }
   }
 
-  def filterQueries(
+  private def filterQueries(
       origQueries: Seq[String],
       args: TPCDSQueryBenchmarkArguments): Seq[String] = {
     if (args.queryFilter.nonEmpty) {
@@ -132,9 +117,31 @@ object TPCDSQueryBenchmark extends Logging {
         s"Empty queries to run. Bad query name filter: ${benchmarkArgs.queryFilter}")
     }
 
-    val tableSizes = setupTables(benchmarkArgs.dataLocation)
-    runTpcdsQueries(queryLocation = "tpcds", queries = queriesV1_4ToRun, tableSizes)
-    runTpcdsQueries(queryLocation = "tpcds-v2.7.0", queries = queriesV2_7ToRun, tableSizes,
-      nameSuffix = "-v2.7")
+    val conf = new SparkConf().setAppName("TPC-DS")
+
+//    val conf = new SparkConf()
+//      .setMaster("local[1]")
+//      .setAppName("test-sql-context")
+//      .set("spark.sql.parquet.compression.codec", "snappy")
+//      .set("spark.sql.shuffle.partitions", "4")
+//      .set("spark.driver.memory", "3g")
+//      .set("spark.executor.memory", "3g")
+//      .set("spark.sql.autoBroadcastJoinThreshold", (20 * 1024 * 1024).toString)
+//      .set("spark.sql.crossJoin.enabled", "true")
+
+    val spark = SparkSession.builder.config(conf).getOrCreate()
+
+    val tables = Seq("catalog_page", "catalog_returns", "customer", "customer_address",
+    "customer_demographics", "date_dim", "household_demographics", "inventory", "item",
+    "promotion", "store", "store_returns", "catalog_sales", "web_sales", "store_sales",
+    "web_returns", "web_site", "reason", "call_center", "warehouse", "ship_mode", "income_band",
+    "time_dim", "web_page")
+
+    val tableSizes = setupTables(spark, tables, benchmarkArgs.dataLocation)
+
+    runTpcdsQueries(spark, queryLocation = "tpcds", queries = queriesV1_4ToRun, tableSizes,
+      benchmarkArgs.numIter)
+    runTpcdsQueries(spark, queryLocation = "tpcds-v2.7.0", queries = queriesV2_7ToRun, tableSizes,
+      benchmarkArgs.numIter, nameSuffix = "-v2.7")
   }
 }
