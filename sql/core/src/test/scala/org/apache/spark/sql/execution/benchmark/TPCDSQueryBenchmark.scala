@@ -66,9 +66,16 @@ object TPCDSQueryBenchmark extends Logging {
       }
       val numRows = queryRelations.map(tableSizes.getOrElse(_, 0L)).sum
       val benchmark = new Benchmark(s"TPCDS Snappy", numRows, numIters)
-      benchmark.addCase(s"$name$nameSuffix") { _ =>
+
+      benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = false)
         spark.sql(queryString).collect()
       }
+      benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = true)
+        spark.sql(queryString).collect()
+      }
+
       logInfo(s"\n\n===== TPCDS QUERY BENCHMARK OUTPUT FOR $name =====\n")
       benchmark.run()
       logInfo(s"\n\n===== FINISHED $name =====\n")
