@@ -24,6 +24,7 @@ import org.apache.spark.sql.catalyst.catalog.HiveTableRelation
 import org.apache.spark.sql.catalyst.plans.logical.SubqueryAlias
 import org.apache.spark.sql.catalyst.util._
 import org.apache.spark.sql.execution.datasources.LogicalRelation
+import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.Benchmark
 
 /**
@@ -38,6 +39,7 @@ object TPCDSQueryBenchmark extends Logging {
     tables.map { tableName =>
       val input = spark.read.parquet(s"$dataLocation/$tableName")
       input.createOrReplaceTempView(tableName)
+      input.persist(StorageLevel.MEMORY_ONLY)
       tableName -> spark.table(tableName).count()
     }.toMap
   }
