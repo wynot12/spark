@@ -40,7 +40,8 @@ object TPCHQueryBenchmark extends Logging {
       val input = spark.read.parquet(s"$dataLocation/$tableName")
       input.createOrReplaceTempView(tableName)
       input.persist(StorageLevel.MEMORY_ONLY)
-      tableName -> spark.table(tableName).count()
+      tableName -> 0L
+//      tableName -> spark.table(tableName).count()
     }.toMap
   }
 
@@ -68,6 +69,8 @@ object TPCHQueryBenchmark extends Logging {
       }
       val numRows = queryRelations.map(tableSizes.getOrElse(_, 0L)).sum
       val benchmark = new Benchmark(s"TPCH", numRows, numIters)
+
+      queryRelations.foreach(spark.table(_).count()) // to materialize tables
 
       benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = false)
