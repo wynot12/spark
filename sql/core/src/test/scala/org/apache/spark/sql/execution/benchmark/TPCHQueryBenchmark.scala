@@ -19,13 +19,15 @@ package org.apache.spark.sql.execution.benchmark
 
 import org.apache.spark.SparkConf
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.catalyst.catalog.HiveTableRelation
 import org.apache.spark.sql.catalyst.plans.logical.SubqueryAlias
 import org.apache.spark.sql.catalyst.util._
 import org.apache.spark.sql.execution.datasources.LogicalRelation
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.util.Benchmark
+
+import scala.collection.mutable
 
 /**
  * Benchmark to measure TPCH query performance.
@@ -34,10 +36,13 @@ import org.apache.spark.util.Benchmark
  */
 object TPCHQueryBenchmark extends Logging {
 
+  val dfMap = mutable.HashMap.empty[String, DataFrame]
+
   private def setupTables(spark: SparkSession, tables: Seq[String],
                           dataLocation: String): Map[String, Long] = {
     tables.map { tableName =>
       val input = spark.read.parquet(s"$dataLocation/$tableName")
+      dfMap.put(tableName, input)
       input.createOrReplaceTempView(tableName)
       input.persist(StorageLevel.MEMORY_ONLY)
       tableName -> 0L
@@ -79,6 +84,16 @@ object TPCHQueryBenchmark extends Logging {
       benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = true)
         spark.sql(queryString).collect()
+      }
+
+      val query = new Q11()
+      benchmark.addCase(s"$name$nameSuffix wholestage off, tpch-spark") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = false)
+        query.execute(spark).collect()
+      }
+      benchmark.addCase(s"$name$nameSuffix wholestage on, tpch-spark") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = true)
+        query.execute(spark).collect()
       }
 
       logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
