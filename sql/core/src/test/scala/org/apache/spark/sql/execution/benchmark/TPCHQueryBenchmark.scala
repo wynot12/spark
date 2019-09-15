@@ -47,7 +47,7 @@ object TPCHQueryBenchmark extends Logging {
     range.createOrReplaceTempView("range")
     range.persist(StorageLevel.MEMORY_ONLY)
 
-    tables.map { tableName =>
+    val tableMap = tables.map { tableName =>
       val input = spark.read.parquet(s"$dataLocation/$tableName")
       dfMap.put(tableName, input)
       input.createOrReplaceTempView(tableName)
@@ -55,6 +55,16 @@ object TPCHQueryBenchmark extends Logging {
       tableName -> 0L
 //      tableName -> spark.table(tableName).count()
     }.toMap
+
+    val lineitem = dfMap.get("lineitem").get
+
+    val joined = range.join(lineitem.select("l_shipdate"))
+
+    logInfo("joined.show()")
+    joined.show()
+    dfMap.put("joined", joined)
+
+    tableMap
   }
 
   private def runTpchQueries(spark: SparkSession,
@@ -97,18 +107,17 @@ object TPCHQueryBenchmark extends Logging {
       logInfo(s"\n\n===== FINISHED $name =====\n")
     }
 
-
     {
       val name = "Q1"
       val benchmark = new Benchmark(s"TPCH-Spark", 0, numIters)
-      val query1 = new Q01()
+      val query = new Q01()
       benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = false)
-        query1.execute(spark).collect().foreach(println)
+        query.execute(spark).collect().foreach(println)
       }
       benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = true)
-        query1.execute(spark).collect().foreach(println)
+        query.execute(spark).collect().foreach(println)
       }
       logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
       benchmark.run()
@@ -118,14 +127,31 @@ object TPCHQueryBenchmark extends Logging {
     {
       val name = "Range/filter"
       val benchmark = new Benchmark(s"Sample", 0, numIters)
-      val query2 = new RangeFilter()
+      val query = new RangeFilter()
       benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = false)
-        query2.execute(spark).collect().foreach(println)
+        query.execute(spark).collect().foreach(println)
       }
       benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = true)
-        query2.execute(spark).collect().foreach(println)
+        query.execute(spark).collect().foreach(println)
+      }
+      logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
+      benchmark.run()
+      logInfo(s"\n\n===== FINISHED $name =====\n")
+    }
+
+    {
+      val name = "Range/filter. Joined"
+      val benchmark = new Benchmark(s"Sample", 0, numIters)
+      val query = new RangeFilterJoined()
+      benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = false)
+        query.execute(spark).collect().foreach(println)
+      }
+      benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = true)
+        query.execute(spark).collect().foreach(println)
       }
       logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
       benchmark.run()
