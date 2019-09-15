@@ -19,7 +19,7 @@ package org.apache.spark.sql.execution.benchmark
 
 import org.apache.spark.SparkConf
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession, functions}
 import org.apache.spark.sql.catalyst.catalog.HiveTableRelation
 import org.apache.spark.sql.catalyst.plans.logical.SubqueryAlias
 import org.apache.spark.sql.catalyst.util._
@@ -42,7 +42,8 @@ object TPCHQueryBenchmark extends Logging {
                           dataLocation: String): Map[String, Long] = {
 
     val N = 500 << 17
-    val range = spark.range(N).toDF()
+    val range0 = spark.range(N).toDF()
+    val range = range0.withColumn("id2", functions.lit(1))
     dfMap.put("range", range)
     range.createOrReplaceTempView("range")
     range.persist(StorageLevel.MEMORY_ONLY)
@@ -58,10 +59,8 @@ object TPCHQueryBenchmark extends Logging {
 
     val lineitem = dfMap.get("lineitem").get
 
-    val joined = range.join(lineitem.select("l_shipdate"))
+    val joined = lineitem.select("l_shipdate").withColumn("id", functions.lit(1))
 
-    logInfo("joined.show()")
-    joined.show()
     dfMap.put("joined", joined)
 
     tableMap
@@ -128,6 +127,23 @@ object TPCHQueryBenchmark extends Logging {
       val name = "Range/filter"
       val benchmark = new Benchmark(s"Sample", 0, numIters)
       val query = new RangeFilter()
+      benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = false)
+        query.execute(spark).collect().foreach(println)
+      }
+      benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = true)
+        query.execute(spark).collect().foreach(println)
+      }
+      logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
+      benchmark.run()
+      logInfo(s"\n\n===== FINISHED $name =====\n")
+    }
+
+    {
+      val name = "Range/filter2"
+      val benchmark = new Benchmark(s"Sample", 0, numIters)
+      val query = new RangeFilter2()
       benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = false)
         query.execute(spark).collect().foreach(println)
