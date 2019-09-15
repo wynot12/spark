@@ -60,7 +60,7 @@ object TPCHQueryBenchmark extends Logging {
 
     val lineitem = dfMap.get("lineitem").get
 
-    val joined = lineitem.select("l_shipdate").withColumn("id", functions.lit(1))
+    val joined = lineitem.select("l_shipdate").withColumn("id", functions.lit(1)).repartition(3)
 
     dfMap.put("joined", joined)
 
