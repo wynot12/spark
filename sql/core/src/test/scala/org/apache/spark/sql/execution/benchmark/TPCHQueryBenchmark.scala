@@ -41,7 +41,8 @@ object TPCHQueryBenchmark extends Logging {
   private def setupTables(spark: SparkSession, tables: Seq[String],
                           dataLocation: String): Map[String, Long] = {
 
-    val N = 500 << 17
+//    val N = 500 << 17
+    val N = 59986052
     val range0 = spark.range(N).toDF()
     val range = range0.withColumn("id2", functions.lit(1))
     dfMap.put("range", range)
