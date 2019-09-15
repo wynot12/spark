@@ -79,21 +79,21 @@ object TPCHQueryBenchmark extends Logging {
 
       benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = false)
-        spark.sql(queryString).collect()
+        spark.sql(queryString).collect().foreach(println)
       }
       benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = true)
-        spark.sql(queryString).collect()
+        spark.sql(queryString).collect().foreach(println)
       }
 
       val query = new Q11()
       benchmark.addCase(s"$name$nameSuffix wholestage off, tpch-spark") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = false)
-        query.execute(spark).collect()
+        query.execute(spark).collect().foreach(println)
       }
       benchmark.addCase(s"$name$nameSuffix wholestage on, tpch-spark") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = true)
-        query.execute(spark).collect()
+        query.execute(spark).collect().foreach(println)
       }
 
       logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
