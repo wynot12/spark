@@ -44,7 +44,8 @@ object TPCHQueryBenchmark extends Logging {
 //    val N = 500 << 17
     val N = 59986052
     val range0 = spark.range(N).toDF()
-    val range = range0.withColumn("id2", functions.lit(1))
+    val range = range0.withColumn("id", functions.lit(1))
+      .withColumn("l_shipdate", functions.lit("1986-09-14"))
     dfMap.put("range", range)
     range.createOrReplaceTempView("range")
     range.persist(StorageLevel.MEMORY_ONLY)
