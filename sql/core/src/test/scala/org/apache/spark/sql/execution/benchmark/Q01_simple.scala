@@ -38,7 +38,7 @@ class Q01_simple {
 
     val lineitem = TPCHQueryBenchmark.dfMap(tableName)
 
-    lineitem.filter($"l_shipdate" <= "1998-09-02")
+    lineitem.filter("(id & 1) = 1")
       .groupBy($"l_returnflag").agg(sum($"l_quantity"))
   }
 }
