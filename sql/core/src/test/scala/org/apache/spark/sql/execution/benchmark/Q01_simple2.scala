@@ -39,6 +39,6 @@ class Q01_simple2 {
     val lineitem = TPCHQueryBenchmark.dfMap(tableName)
 
     lineitem.filter($"l_orderkey" > 0)
-      .groupBy($"l_returnflag").agg(sum($"l_quantity"))
+      .groupBy().agg(sum($"l_quantity"))
   }
 }

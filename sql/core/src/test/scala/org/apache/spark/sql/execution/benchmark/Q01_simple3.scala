@@ -25,7 +25,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
  * Savvas Savvides <savvas@purdue.edu>
  *
  */
-class Q01_simple_groupbyid {
+class Q01_simple3 {
 
   def execute(sc: SparkSession, tableName: String): DataFrame = {
 
@@ -38,7 +38,7 @@ class Q01_simple_groupbyid {
 
     val lineitem = TPCHQueryBenchmark.dfMap(tableName)
 
-    lineitem.filter("(id & 1) = 1")
-      .groupBy($"l_orderkey").agg(sum($"l_quantity"))
+    lineitem.filter($"l_orderkey" > 0)
+      .groupBy($"id").agg(sum($"l_quantity"))
   }
 }

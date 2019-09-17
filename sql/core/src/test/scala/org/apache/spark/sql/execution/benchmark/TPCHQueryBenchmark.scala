@@ -59,6 +59,12 @@ object TPCHQueryBenchmark extends Logging {
 //      tableName -> spark.table(tableName).count()
     }.toMap
 
+    val lineitem = dfMap.get("lineitem").get
+    val lineitem_id = lineitem.withColumn("id", functions.lit(1))
+    lineitem_id.createOrReplaceTempView("lineitem")
+    lineitem_id.persist(StorageLevel.MEMORY_ONLY)
+    dfMap.put("lineitem", lineitem_id)
+
     tableMap
   }
 
@@ -156,16 +162,10 @@ object TPCHQueryBenchmark extends Logging {
     }
 
     {
-      val lineitem = dfMap.get("lineitem").get
-      val lineitem_id = lineitem.withColumn("id", functions.lit(1))
-      lineitem_id.createOrReplaceTempView("lineitem_id")
-      lineitem_id.persist(StorageLevel.MEMORY_ONLY)
-      dfMap.put("lineitem_id", lineitem_id)
-
-      val name = "TPCH-Q1_simple_groupbyid-lineitem_id"
-      val tableName = "lineitem_id"
+      val name = "TPCH-Q1_simple3-lineitem"
+      val tableName = "lineitem"
       val benchmark = new Benchmark(s"TPCH-Spark", 0, numIters)
-      val query = new Q01_simple_groupbyid()
+      val query = new Q01_simple3()
       benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = false)
         query.execute(spark, tableName).collect().foreach(println)
@@ -177,34 +177,6 @@ object TPCHQueryBenchmark extends Logging {
       logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
       benchmark.run()
       logInfo(s"\n\n===== FINISHED $name =====\n")
-
-      lineitem_id.unpersist(true)
-    }
-
-    {
-      val lineitem = dfMap.get("lineitem").get
-      val lineitem_partial = lineitem.select("l_shipdate", "l_returnflag", "l_quantity", "l_orderkey")
-      lineitem_partial.createOrReplaceTempView("lineitem_partial")
-      lineitem_partial.persist(StorageLevel.MEMORY_ONLY)
-      dfMap.put("lineitem_partial", lineitem_partial)
-
-      val name = "TPCH-Q1_simple-lineitem_partial"
-      val tableName = "lineitem_partial"
-      val benchmark = new Benchmark(s"TPCH-Spark", 0, numIters)
-      val query = new Q01_simple()
-      benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
-        spark.conf.set("spark.sql.codegen.wholeStage", value = false)
-        query.execute(spark, tableName).collect().foreach(println)
-      }
-      benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
-        spark.conf.set("spark.sql.codegen.wholeStage", value = true)
-        query.execute(spark, tableName).collect().foreach(println)
-      }
-      logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
-      benchmark.run()
-      logInfo(s"\n\n===== FINISHED $name =====\n")
-
-      lineitem_partial.unpersist(true)
     }
 
     {
