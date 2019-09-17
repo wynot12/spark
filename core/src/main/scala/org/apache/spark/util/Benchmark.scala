@@ -131,6 +131,7 @@ private[spark] class Benchmark(
   def measure(num: Long, overrideNumIters: Int)(f: Timer => Unit): Result = {
     System.gc()  // ensures garbage from previous cases don't impact this one
     val warmupDeadline = warmupTime.fromNow
+    println("warmup")
     while (!warmupDeadline.isOverdue) {
       f(new Benchmark.Timer(-1))
     }
@@ -139,6 +140,7 @@ private[spark] class Benchmark(
     val runTimes = ArrayBuffer[Long]()
     var i = 0
     while (i < minIters || runTimes.sum < minDuration) {
+      println("iteration: " + i)
       val timer = new Benchmark.Timer(i)
       f(timer)
       val runTime = timer.totalTime()
