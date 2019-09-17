@@ -138,8 +138,25 @@ object TPCHQueryBenchmark extends Logging {
     }
 
     {
-      val lineitem = dfMap.get("lineitem").get
+      val name = "TPCH-Q1_simple2-lineitem"
+      val tableName = "lineitem"
+      val benchmark = new Benchmark(s"TPCH-Spark", 0, numIters)
+      val query = new Q01_simple2()
+      benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = false)
+        query.execute(spark, tableName).collect().foreach(println)
+      }
+      benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = true)
+        query.execute(spark, tableName).collect().foreach(println)
+      }
+      logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
+      benchmark.run()
+      logInfo(s"\n\n===== FINISHED $name =====\n")
+    }
 
+    {
+      val lineitem = dfMap.get("lineitem").get
       val lineitem_partial = lineitem.select("l_shipdate", "l_returnflag", "l_quantity")
       lineitem_partial.createOrReplaceTempView("lineitem_partial")
       lineitem_partial.persist(StorageLevel.MEMORY_ONLY)

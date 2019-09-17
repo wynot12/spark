@@ -25,7 +25,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
  * Savvas Savvides <savvas@purdue.edu>
  *
  */
-class Q01_simple {
+class Q01_simple2 {
 
   def execute(sc: SparkSession, tableName: String): DataFrame = {
 
@@ -38,7 +38,7 @@ class Q01_simple {
 
     val lineitem = TPCHQueryBenchmark.dfMap(tableName)
 
-    lineitem.filter($"l_shipdate" <= "1998-09-02")
+    lineitem.filter("(l_quantity & 1) = 1")
       .groupBy($"l_returnflag").agg(sum($"l_quantity"))
   }
 }
