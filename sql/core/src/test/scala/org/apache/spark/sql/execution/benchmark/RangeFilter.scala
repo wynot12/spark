@@ -26,9 +26,9 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
  */
 class RangeFilter {
 
-  def execute(sc: SparkSession): DataFrame = {
+  def execute(sc: SparkSession, tableName: String): DataFrame = {
 
-    val range = TPCHQueryBenchmark.dfMap.get("range").get
+    val range = TPCHQueryBenchmark.dfMap(tableName)
     range.filter("(id & 1) = 1").groupBy().sum()
   }
 }

@@ -180,16 +180,35 @@ object TPCHQueryBenchmark extends Logging {
     }
 
     {
-      val name = "Range.filter.groupBy.sum"
+      val name = "Lineitem.filter.groupBy.sum"
+      val tableName = "lineitem"
       val benchmark = new Benchmark(s"Sample", 0, numIters)
       val query = new RangeFilter()
       benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = false)
-        query.execute(spark).collect().foreach(println)
+        query.execute(spark, tableName).collect().foreach(println)
       }
       benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
         spark.conf.set("spark.sql.codegen.wholeStage", value = true)
-        query.execute(spark).collect().foreach(println)
+        query.execute(spark, tableName).collect().foreach(println)
+      }
+      logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
+      benchmark.run()
+      logInfo(s"\n\n===== FINISHED $name =====\n")
+    }
+
+    {
+      val name = "Range.filter.groupBy.sum"
+      val tableName = "range"
+      val benchmark = new Benchmark(s"Sample", 0, numIters)
+      val query = new RangeFilter()
+      benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = false)
+        query.execute(spark, tableName).collect().foreach(println)
+      }
+      benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = true)
+        query.execute(spark, tableName).collect().foreach(println)
       }
       logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
       benchmark.run()
