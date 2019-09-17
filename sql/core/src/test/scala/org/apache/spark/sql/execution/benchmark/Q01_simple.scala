@@ -27,7 +27,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
  */
 class Q01_simple {
 
-  def execute(sc: SparkSession): DataFrame = {
+  def execute(sc: SparkSession, tableName: String): DataFrame = {
 
     // this is used to implicitly convert an RDD to a DataFrame.
     val sqlContext = sc.sqlContext
@@ -36,9 +36,9 @@ class Q01_simple {
     val decrease = udf { (x: Double, y: Double) => x * (1 - y) }
     val increase = udf { (x: Double, y: Double) => x * (1 + y) }
 
-    val lineitem = TPCHQueryBenchmark.dfMap.get("joined").get
+    val lineitem = TPCHQueryBenchmark.dfMap(tableName)
 
     lineitem.filter($"l_shipdate" <= "1998-09-02")
-      .groupBy().sum()
+      .groupBy($"l_returnflag").sum()
   }
 }
