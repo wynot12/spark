@@ -283,11 +283,94 @@ object TPCHQueryBenchmark extends Logging {
 
     {
       val lineitem = dfMap.get("lineitem").get
-      val lineitem_selected = lineitem.select("id")
+      val lineitem_selected = lineitem.select("id", "l_returnflag")
       lineitem_selected.createOrReplaceTempView("lineitem_selected")
       lineitem_selected.persist(StorageLevel.MEMORY_ONLY)
       dfMap.put("lineitem_selected", lineitem_selected)
 
+
+      val name = "Lineitem_selected.filter.groupBy.sum"
+      val tableName = "lineitem_selected"
+      val benchmark = new Benchmark(s"Sample", 0, numIters)
+      val query = new RangeFilter()
+      benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = false)
+        query.execute(spark, tableName).collect().foreach(println)
+      }
+      benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = true)
+        query.execute(spark, tableName).collect().foreach(println)
+      }
+      logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
+      benchmark.run()
+      logInfo(s"\n\n===== FINISHED $name =====\n")
+
+
+      lineitem_selected.unpersist(true)
+    }
+
+    {
+      val lineitem = dfMap.get("lineitem").get
+      val lineitem_selected = lineitem.select("id", "l_quantity")
+      lineitem_selected.createOrReplaceTempView("lineitem_selected")
+      lineitem_selected.persist(StorageLevel.MEMORY_ONLY)
+      dfMap.put("lineitem_selected", lineitem_selected)
+
+
+      val name = "Lineitem_selected.filter.groupBy.sum"
+      val tableName = "lineitem_selected"
+      val benchmark = new Benchmark(s"Sample", 0, numIters)
+      val query = new RangeFilter()
+      benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = false)
+        query.execute(spark, tableName).collect().foreach(println)
+      }
+      benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = true)
+        query.execute(spark, tableName).collect().foreach(println)
+      }
+      logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
+      benchmark.run()
+      logInfo(s"\n\n===== FINISHED $name =====\n")
+
+
+      lineitem_selected.unpersist(true)
+    }
+
+    {
+      val lineitem = dfMap.get("lineitem").get
+      val lineitem_selected = lineitem.select("id", "l_orderkey")
+      lineitem_selected.createOrReplaceTempView("lineitem_selected")
+      lineitem_selected.persist(StorageLevel.MEMORY_ONLY)
+      dfMap.put("lineitem_selected", lineitem_selected)
+
+
+      val name = "Lineitem_selected.filter.groupBy.sum"
+      val tableName = "lineitem_selected"
+      val benchmark = new Benchmark(s"Sample", 0, numIters)
+      val query = new RangeFilter()
+      benchmark.addCase(s"$name$nameSuffix wholestage off") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = false)
+        query.execute(spark, tableName).collect().foreach(println)
+      }
+      benchmark.addCase(s"$name$nameSuffix wholestage on") { _ =>
+        spark.conf.set("spark.sql.codegen.wholeStage", value = true)
+        query.execute(spark, tableName).collect().foreach(println)
+      }
+      logInfo(s"\n\n===== TPCH QUERY BENCHMARK OUTPUT FOR $name =====\n")
+      benchmark.run()
+      logInfo(s"\n\n===== FINISHED $name =====\n")
+
+
+      lineitem_selected.unpersist(true)
+    }
+
+    {
+      val lineitem = dfMap.get("lineitem").get
+      val lineitem_selected = lineitem.select("id")
+      lineitem_selected.createOrReplaceTempView("lineitem_selected")
+      lineitem_selected.persist(StorageLevel.MEMORY_ONLY)
+      dfMap.put("lineitem_selected", lineitem_selected)
 
       val name = "Lineitem_selected.filter.groupBy.sum"
       val tableName = "lineitem_selected"
