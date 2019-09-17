@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.execution.benchmark
 
-import org.apache.spark.sql.functions.{avg, count, sum, udf}
+import org.apache.spark.sql.functions.{sum, udf}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
@@ -25,7 +25,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
  * Savvas Savvides <savvas@purdue.edu>
  *
  */
-class Q01_simple2 {
+class Q01_simple_groupbyid {
 
   def execute(sc: SparkSession, tableName: String): DataFrame = {
 
@@ -38,7 +38,7 @@ class Q01_simple2 {
 
     val lineitem = TPCHQueryBenchmark.dfMap(tableName)
 
-    lineitem.filter("(l_orderkey & 1) = 1")
-      .groupBy($"l_returnflag").agg(sum($"l_quantity"))
+    lineitem.filter("(id & 1) = 1")
+      .groupBy($"l_orderkey").agg(sum($"l_quantity"))
   }
 }
